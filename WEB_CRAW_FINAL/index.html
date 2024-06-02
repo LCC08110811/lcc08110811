@@ -1,0 +1,349 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>嘖嘖平台的數據分析</title>
+	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+	<style>
+		body {
+			font-family: Arial, Microsoft JhengHei UI;
+			margin: 0;
+			padding: 0;
+		}
+
+
+		.container {
+			padding: 10px;
+			justify-content: left;
+		}
+
+		.dropdown {
+			margin: 10px 0;
+			text-align: left;
+			max-width: 65%;
+		}
+
+		.chart-container {
+			display: none;
+			justify-content: center;
+			max-width: 60%;
+			/* Ensure the container does not exceed the box width */
+		}
+
+		canvas {
+			max-width: 90%;
+			/* Ensure the canvas does not exceed the container width */
+			height: auto;
+			/* Maintain aspect ratio */
+		}
+
+		.visible {
+			display: flex;
+		}
+
+		h1 {
+			font-family: 'Microsoft JhengHei UI', sans-serif;
+			font-size: 20px;
+		}
+
+		h2 {
+			font-family: 'Microsoft JhengHei UI', sans-serif;
+		}
+
+		#one {
+			min-height: 200vh;
+			/* Adjust the minimum height as needed */
+		}
+	</style>
+	<link rel="stylesheet" href="assets/css/main.css">
+</head>
+
+<body>
+
+	<!-- Header -->
+	<header id="header">
+		<div class="logo"><a href="index.html">嘖嘖平台的<span>數據分析</span></a></div>
+		<a href="#menu"><span>Menu</span></a>
+	</header>
+
+	<nav id="menu">
+		<ul class="links">
+			<li><a href="index.html">首頁</a></li>
+			<li><a href="generic.html">介紹</a></li>
+
+		</ul>
+	</nav>
+	<section id="banner" class="bg-img" data-bg="banner.jpg">
+		<div class="inner">
+			<header>
+				<h1 style="font-family: 'Microsoft JhengHei UI', sans-serif; font-size: 80px;">嘖嘖平台的數據分析</h1>
+			</header>
+		</div>
+		<a href="#one" class="more">Learn More</a>
+	</section><!-- One -->
+	<section id="one" class="wrapper post bg-img" data-bg="banner2.jpg">
+		<div class="inner">
+			<article class="box">
+				<div class="container">
+					<div class="dropdown">
+						<label for="chartSelect">請選擇你要查詢的圖表：</label>
+						<select id="chartSelect" style="color: rgb(205, 203, 203);">
+							<option value="">--請選擇--</option>
+							<option value="targetAmountChart">每種產品平均目標金額</option>
+							<option value="crowdfundingPercentageChart">每種產品平均募資百分比</option>
+							<option value="investorNumberChart">每種產品平均投資人數</option>
+							<option value="successRateChart">每種產品集資成功比例</option>
+							<option value="totalTargetAmountPieChart">各類別目標金額占比</option>
+							<option value="productCountPieChart">各類別產品數量占比</option>
+						</select>
+					</div>
+					<div id="chartContainers">
+						<div id="targetAmountChartContainer" class="chart-container">
+							<canvas id="targetAmountChart"></canvas>
+						</div>
+						<div id="crowdfundingPercentageChartContainer" class="chart-container">
+							<canvas id="crowdfundingPercentageChart"></canvas>
+						</div>
+						<div id="investorNumberChartContainer" class="chart-container">
+							<canvas id="investorNumberChart"></canvas>
+						</div>
+						<div id="successRateChartContainer" class="chart-container">
+							<canvas id="successRateChart"></canvas>
+						</div>
+						<div id="totalTargetAmountPieChartContainer" class="chart-container"
+							style="max-width: 50%; justify-content: center; max-height: 40%">
+							<canvas id="totalTargetAmountPieChart" style="width: 300px; height: 150px;"></canvas>
+						</div>
+
+						<div id="productCountPieChartContainer" class="chart-container"
+							style="max-width: 50%; justify-content: center; max-height: 40%">
+							<canvas id="productCountPieChart" style="width: 300px; height: 150px;"></canvas>
+						</div>
+
+					</div>
+				</div>
+
+				<script>
+					document.addEventListener('DOMContentLoaded', function () {
+						var chartSelect = document.getElementById('chartSelect');
+						var chartContainers = document.getElementById('chartContainers').children;
+
+						chartSelect.addEventListener('change', function () {
+							for (var i = 0; i < chartContainers.length; i++) {
+								chartContainers[i].classList.remove('visible');
+							}
+							if (this.value) {
+								document.getElementById(this.value + 'Container').classList.add('visible');
+							}
+						});
+
+						// 柱狀圖
+						var labels = ['出版', '地方創生', '挺好店', '攝影', '教育', '新春賀喜', '時尚', '社會', '科技', '空間', '藝術', '表演', '設計', '遊戲', '電影動畫', '音樂', '飲食'];
+						var targetAmountData = [855952.08, 344861.77, 220640.43, 1063000.72, 704304.99, 125158.0, 744667.86, 641706.56, 3291086.49, 1259325.67, 308509.14, 122232.18, 1463995.61, 941955.45, 232125.05, 244477.1, 716272.91];
+						var crowdfundingPercentageData = [2510.58, 265.77, 801.25, 1079.84, 726.18, 929.0, 1005.03, 192.21, 3199.54, 1259.98, 364.82, 161.74, 1561.79, 2494.91, 177.81, 164.03, 1652.85];
+						var investorNumberData = [585.75, 146.28, 100.80, 432.06, 251.44, 104.53, 266.60, 366.26, 660.54, 256.31, 175.04, 68.77, 621.64, 474.45, 151.37, 142.53, 268.06];
+						var successRateData = [0.77, 0.72, 0.84, 0.77, 0.74, 0.79, 0.79, 0.78, 0.82, 0.67, 0.75, 0.74, 0.77, 0.77, 0.69, 0.75, 0.79];
+
+						// 圓餅圖
+						var totalTargetAmountLabels = ['出版', '地方創生', '挺好店', '攝影', '教育', '新春賀喜', '時尚', '社會', '科技', '空間', '藝術', '表演', '設計', '遊戲', '電影動畫', '音樂', '飲食'];
+						var totalTargetAmountData = [
+							1286495982.0, 178983261.0, 110540856.0, 204096138.0, 635987409.0, 16145382.0, 1154979846.0,
+							839352177.0, 16764794592.0, 204010758.0, 161041770.0, 48770640.0, 10189409412.0, 1048396419.0,
+							127436652.0, 136418220.0, 1177552662.0
+						];
+
+						var productCountData = [1503, 519, 501, 192, 903, 129, 1551, 1308, 5094, 162, 522, 399, 6960, 1113, 549, 558, 1644];
+
+						// createchart
+						createBarChart('targetAmountChart', '平均目標金額', labels, targetAmountData);
+						createBarChart('crowdfundingPercentageChart', '平均募資百分比', labels, crowdfundingPercentageData);
+						createBarChart('investorNumberChart', '平均投資人數', labels, investorNumberData);
+						createBarChart('successRateChart', '集資成功比例', labels, successRateData);
+						createPieChart('totalTargetAmountPieChart', '各類別目標金額占比', totalTargetAmountLabels, totalTargetAmountData);
+						createPieChart('productCountPieChart', '各類別產品數量占比', totalTargetAmountLabels, productCountData);
+					});
+
+					function createBarChart(canvasId, label, labels, data) {
+						var ctx = document.getElementById(canvasId).getContext('2d');
+						var myChart = new Chart(ctx, {
+							type: 'bar',
+							data: {
+								labels: labels,
+								datasets: [{
+									label: label,
+									data: data,
+									backgroundColor: 'rgba(255, 99, 132, 0.2)',
+									borderColor: 'rgba(255, 99, 132, 1)',
+									borderWidth: 2
+								}]
+							},
+							options: {
+								scales: {
+									y: {
+										beginAtZero: true
+									}
+								}
+							}
+						});
+					}
+
+					function createPieChart(canvasId, label, labels, data) {
+						var ctx = document.getElementById(canvasId).getContext('2d');
+						var myChart = new Chart(ctx, {
+							type: 'pie',
+							data: {
+								labels: labels,
+								datasets: [{
+									label: label,
+									data: data,
+									backgroundColor: [
+										'rgba(255, 99, 132, 0.2)', 'rgba(54, 162, 235, 0.2)', 'rgba(255, 206, 86, 0.2)',
+										'rgba(75, 192, 192, 0.2)', 'rgba(153, 102, 255, 0.2)', 'rgba(255, 159, 64, 0.2)',
+										'rgba(199, 199, 199, 0.2)', 'rgba(83, 102, 255, 0.2)', 'rgba(235, 86, 255, 0.2)',
+										'rgba(54, 235, 162, 0.2)', 'rgba(162, 235, 54, 0.2)', 'rgba(206, 86, 255, 0.2)',
+										'rgba(192, 75, 75, 0.2)', 'rgba(102, 255, 153, 0.2)', 'rgba(159, 64, 255, 0.2)',
+										'rgba(255, 219, 112, 0.2)', 'rgba(255, 180, 138, 0.2)'
+									],
+									borderColor: [
+										'rgba(255, 99, 132, 1)', 'rgba(54, 162, 235, 1)', 'rgba(255, 206, 86, 1)',
+										'rgba(75, 192, 192, 1)', 'rgba(153, 102, 255, 1)', 'rgba(255, 159, 64, 1)',
+										'rgba(199, 199, 199, 1)', 'rgba(83, 102, 255, 1)', 'rgba(235, 86, 255, 1)',
+										'rgba(54, 235, 162, 1)', 'rgba(162, 235, 54, 1)', 'rgba(206, 86, 255, 1)',
+										'rgba(192, 75, 75, 1)', 'rgba(102, 255, 153, 1)', 'rgba(159, 64, 255, 1)',
+										'rgba(255, 219, 112, 1)', 'rgba(255, 180, 138, 1)'
+									],
+									borderWidth: 2
+								}]
+							},
+							options: {
+								responsive: true,
+								plugins: {
+									legend: {
+										position: 'top',
+									},
+									title: {
+										display: true,
+										text: label
+									},
+									datalabels: {
+										formatter: (value, ctx) => {
+											let sum = ctx.dataset.data.reduce((a, b) => a + b, 0);
+											let percentage = (value * 100 / sum).toFixed(2) + "%";
+											return percentage;
+										},
+										color: '#aaaaaa',
+									}
+								}
+							},
+							plugins: [ChartDataLabels]
+						});
+					}
+				</script>
+				<div class="content">
+					<p></p>
+				</div>
+				<footer><a href="https://www.zeczec.com/" class="button alt">嘖嘖募資</a>
+				</footer>
+			</article>
+		</div>
+
+	</section>
+	<footer id="footer">
+		<div class="inner">
+
+			<h2>Search CSV</h2>
+
+			<form action="#" method="post">
+				<div class="field">
+					<div class="field">
+						<label for="query">Search</label>
+						<input name="query" id="query" type="text" placeholder="Enter search term">
+
+					</div>
+					<ul class="actions">
+						<li><button onclick="search()">Search</button>
+							<script>
+								function search() {
+									var query = document.getElementById("query").value;
+									var csvFile = document.getElementById("csvFile").files[0];
+
+									if (!csvFile) {
+										alert("Please select a CSV file.");
+										return;
+									}
+
+									var reader = new FileReader();
+									reader.onload = function (event) {
+										var csvData = event.target.result;
+										var results = search_csv(csvData, query);
+										showResults(results);
+									};
+									reader.readAsText(csvFile);
+								}
+
+								function search_csv(csvData, query) {
+
+									var rows = csvData.split("\n");
+									var headers = rows[0].split(",");
+									var results = [];
+
+									for (var i = 1; i < rows.length; i++) {
+										var row = rows[i].split(",");
+										var rowData = {};
+										for (var j = 0; j < headers.length; j++) {
+											rowData[headers[j]] = row[j];
+										}
+										results.push(rowData);
+									}
+
+									results = results.filter(function (row) {
+										return Object.values(row).some(function (value) {
+											return String(value).toLowerCase().includes(query.toLowerCase());
+										});
+									});
+
+									return results;
+								}
+
+								function showResults(results) {
+									var searchResults = document.getElementById("searchResults");
+									searchResults.innerHTML = "";
+									if (results.length > 0) {
+										var table = document.createElement("table");
+										var headerRow = table.insertRow(0);
+										Object.keys(results[0]).forEach(function (key) {
+											var headerCell = document.createElement("th");
+											headerCell.textContent = key;
+											headerRow.appendChild(headerCell);
+										});
+										results.forEach(function (result) {
+											var row = table.insertRow();
+											Object.values(result).forEach(function (value) {
+												var cell = row.insertCell();
+												cell.textContent = value;
+											});
+										});
+										searchResults.appendChild(table);
+									} else {
+										searchResults.textContent = "No results found";
+									}
+								}
+							</script>
+						</li>
+					</ul>
+			</form>
+		</div>
+	</footer>
+
+	<script src="assets/js/jquery.min.js"></script>
+	<script src="assets/js/jquery.scrolly.min.js"></script>
+	<script src="assets/js/jquery.scrollex.min.js"></script>
+	<script src="assets/js/skel.min.js"></script>
+	<script src="assets/js/util.js"></script>
+	<script src="assets/js/main.js"></script>
+</body>
+
+</html>
